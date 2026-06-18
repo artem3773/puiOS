@@ -1,100 +1,98 @@
+; =================================================================
+; NOTEPAD.ASM - Текстовый редактор на базе UI.asm
+; =================================================================
+
 run_notepad:
-    ; Основное текстовое поле оставляем светлым для удобства чтения (0x70 - серый/белый фон)
-    mov ax, 0x0600
-    mov bh, 0x70        
-    mov cx, 0x0000
-    mov dx, 0x184f
-    int 0x10
+    ; Очищаем внутренний буфер текста перед открытием
+    mov di, notepad_buffer
+    mov cx, 512
+    xor al, al
+    rep stosb
+    mov word [notepad_ptr], 0
 
-    ; А вот статус-бар внизу сделаем зависимым от выбранной темы!
-    mov ax, 0x0600
-    mov bh, [menu_color]  ; <-- Статус-бар окрасится в цвет текущей темы!
-    mov cx, 0x1800      
-    mov dx, 0x184f      
-    int 0x10
+.redraw:
+    ; 1. Рисуем рабочую область (светло-серое поле, строки 2-23)
+    mov ch, 2
+    mov cl, 0
+    mov dh, 23
+    mov dl, 79
+    mov al, 0           ; Код стиля: классический серый блокнот
+    call UI_Pole
 
+    ; 2. Верхняя панель
+    mov dh, 0
+    mov si, msg_note_title
+    mov al, 1           ; В цвет системной темы
+    call UI_Panel
+
+    ; 3. Нижняя панель подсказок
     mov dh, 24
+    mov si, msg_note_tip
+    mov al, 1           ; В цвет системной темы
+    call UI_Panel
+
+    ; 4. Выводим текст из буфера на рабочее поле
+    mov dh, 3
     mov dl, 2
     call move_cursor
-    mov si, msg_notepad_bar
+    mov si, notepad_buffer
     call print_string
 
-    ; Сбрасываем курсор в начало (0, 0)
-    mov dh, 0
-    mov dl, 0
-    call move_cursor
-
-notepad_loop:
+.loop:
     mov ah, 0x00
-    int 0x16            
+    int 0x16            ; Ждем символ
 
-    cmp al, 0x1B        
-    je .exit_notepad
+    cmp al, 0x1B        ; ESC — безопасный выход
+    je .exit
 
-    cmp al, 0x0D        
-    je .notepad_enter
+    cmp al, 0x08        ; Backspace — удаление
+    je .backspace
 
-    cmp al, 0x08        
-    je .notepad_backspace
+    cmp al, 0x0D        ; Enter — новая строка
+    je .enter
 
-    cmp al, 0x20        
-    jl notepad_loop     
+    ; Проверяем лимит буфера (512 байт)
+    mov bx, [notepad_ptr]
+    cmp bx, 511
+    jae .loop
 
-    push ax
-    mov ah, 0x03
-    mov bh, 0
-    int 0x10            
-    pop ax
-    cmp dl, 79
-    je notepad_loop     
+    ; Фильтруем мусорные управляющие символы
+    cmp al, ' '
+    jb .loop
 
-    ; Печать символа. Чтобы буквы в Блокноте тоже выглядели красиво, 
-    ; сделаем их всегда черными на нашем сером фоне (атрибут 0x70)
-    mov ah, 0x0E
-    mov bh, 0
-    int 0x10
-    jmp notepad_loop
+    ; Записываем символ в память
+    mov [notepad_buffer + bx], al
+    inc word [notepad_ptr]
+    jmp .redraw
 
-.notepad_enter:
-    mov ah, 0x03
-    mov bh, 0
-    int 0x10            
-    cmp dh, 23          
-    jge notepad_loop    
-    inc dh              
-    mov dl, 0           
-    mov ah, 0x02        
-    int 0x10
-    jmp notepad_loop
+.backspace:
+    mov bx, [notepad_ptr]
+    cmp bx, 0
+    je .loop            
+    
+    dec word [notepad_ptr]
+    dec bx
+    mov byte [notepad_buffer + bx], 0  ; Затираем символ нулем
+    jmp .redraw
 
-.notepad_backspace:
-    mov ah, 0x03
-    mov bh, 0
-    int 0x10            
-    cmp dh, 0
-    jne .check_column
-    cmp dl, 0
-    je notepad_loop
-.check_column:
-    cmp dl, 0
-    je .move_to_prev_line
-    dec dl              
-    mov ah, 0x02
-    int 0x10            
-    mov ah, 0x0A
-    mov al, ' '         
-    mov cx, 1
-    int 0x10
-    jmp notepad_loop
-.move_to_prev_line:
-    dec dh              
-    mov dl, 79          
-    mov ah, 0x02
-    int 0x10
-    jmp notepad_loop
+.enter:
+    mov bx, [notepad_ptr]
+    cmp bx, 510
+    jae .loop
+    
+    ; Записываем стандартный DOS-перенос строки CR+LF
+    mov byte [notepad_buffer + bx], 0x0D
+    mov byte [notepad_buffer + bx + 1], 0x0A
+    add word [notepad_ptr], 2
+    jmp .redraw
 
-.exit_notepad:
-    ret
+.exit:
+    ret                 ; Возврат в ядро оболочки
 
-; Данные блокнота
-msg_notepad_bar db " ASM NOTEPAD v1.2   |   Enter = New Line  |  ESC = Exit ", 0
+; --- Данные блокнота ---
+notepad_ptr     dw 0
+msg_note_title  db " puiOS Text Editor - v1.0 ", 0
+msg_note_tip    db " Type text... | Backspace: Delete character | Exit: ESC ", 0
+
+notepad_count   dw 0
+notepad_buffer  times 512 db 0
