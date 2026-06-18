@@ -1,8 +1,10 @@
 # puiOS
 OS на ассемблере с помощью gemini ai с псевдо GUI
+
 #скриншоты
 
-<img width="367" height="414" alt="Снимок экрана 2026-06-12 101056" src="https://github.com/user-attachments/assets/4d0e1036-58e9-49e3-98e2-bc335f3c61e4" />
-<img width="1919" height="1077" alt="Снимок экрана 2026-06-12 102007" src="https://github.com/user-attachments/assets/f132de2b-b52f-4831-8bd8-f42c6b712373" />
-<img width="1919" height="1079" alt="Снимок экрана 2026-06-12 101634" src="https://github.com/user-attachments/assets/e890d7f3-6907-49c0-af76-386c668c2a8c" />
-<img width="1919" height="1079" alt="Снимок экрана 2026-06-12 101123" src="https://github.com/user-attachments/assets/69e6d82e-964b-49f4-b3ac-9014a2533e65" />
+<img width="1918" height="1078" alt="Снимок экрана 2026-06-18 093014" src="https://github.com/user-attachments/assets/6d01c63d-0701-47be-9134-909b9d3bf2d5" />
+<img width="1918" height="1078" alt="Снимок экрана 2026-06-18 094150" src="https://github.com/user-attachments/assets/9aaf4c62-5459-40be-b85f-cd515e9a9bc3" />
+<img width="1913" height="1078" alt="Снимок экрана 2026-06-18 093206" src="https://github.com/user-attachments/assets/1b00beca-b829-46b2-bfc8-e50ed254e1d9" />
+<img width="1918" height="1078" alt="Снимок экрана 2026-06-18 093025" src="https://github.com/user-attachments/assets/521216eb-1f8d-4259-b310-e469c254302e" />
+<img width="1918" height="1078" alt="Снимок экрана 2026-06-18 094156" src="https://github.com/user-attachments/assets/d65ca240-1a7c-4583-9247-9e4d4081c9b9" />
